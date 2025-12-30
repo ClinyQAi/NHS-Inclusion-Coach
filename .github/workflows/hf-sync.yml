@@ -28,6 +28,7 @@ jobs:
           token = os.environ.get("HF_TOKEN")
           if not token:
               raise ValueError("HF_TOKEN not found in environment")
+          token = token.strip()
 
           api = HfApi(token=token)
           
