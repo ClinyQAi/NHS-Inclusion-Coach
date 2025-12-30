@@ -19,4 +19,5 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          git push -f https://NurseCitizenDeveloper:$HF_TOKEN@huggingface.co/spaces/NurseCitizenDeveloper/Health-Inclusion-Coach master:main
+          git remote add space https://NurseCitizenDeveloper:$HF_TOKEN@huggingface.co/spaces/NurseCitizenDeveloper/Health-Inclusion-Coach
+          git push --force space master:main
