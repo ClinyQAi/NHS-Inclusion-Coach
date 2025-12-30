@@ -2,7 +2,20 @@ import { GoogleGenAI, GenerateContentParameters, Part, Chat } from "@google/gena
 import { Message, Author, GroundingSource } from "../types";
 import { SYSTEM_PROMPT } from "../constants";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+let ai: GoogleGenAI | null = null;
+
+const getAIClient = () => {
+    if (ai) return ai;
+
+    const apiKey = process.env.API_KEY || localStorage.getItem("GEMINI_API_KEY");
+
+    if (!apiKey) {
+        throw new Error("API Key not found. Please ensure it is set in environment or localStorage.");
+    }
+
+    ai = new GoogleGenAI({ apiKey });
+    return ai;
+};
 
 const fileToGenerativePart = async (file: File): Promise<Part> => {
     const base64EncodedDataPromise = new Promise<string>((resolve) => {
@@ -35,25 +48,26 @@ function buildGeminiHistory(messages: Message[]) {
 export async function* getChatResponseStream(history: Message[], newMessage: string): AsyncGenerator<{ text: string; sources: GroundingSource[] }> {
     const model = 'gemini-2.5-flash';
     const geminiHistory = buildGeminiHistory(history);
-    
-    const chat: Chat = ai.chats.create({
-        model: model,
-        history: geminiHistory,
-        config: {
-            systemInstruction: SYSTEM_PROMPT,
-            tools: [{ googleSearch: {} }],
-        },
-    });
 
     try {
+        const aiClient = getAIClient();
+        const chat: Chat = aiClient.chats.create({
+            model: model,
+            history: geminiHistory,
+            config: {
+                systemInstruction: SYSTEM_PROMPT,
+                tools: [{ googleSearch: {} }],
+            },
+        });
+
         const stream = await chat.sendMessageStream({ message: newMessage });
 
         for await (const chunk of stream) {
             const groundingChunks = chunk.candidates?.[0]?.groundingMetadata?.groundingChunks;
             const sources = groundingChunks?.map((chunk: any) => ({
-                    uri: chunk.web.uri,
-                    title: chunk.web.title,
-                })).filter((source: any) => source.uri && source.title) ?? [];
+                uri: chunk.web.uri,
+                title: chunk.web.title,
+            })).filter((source: any) => source.uri && source.title) ?? [];
 
             yield {
                 text: chunk.text,
@@ -89,9 +103,10 @@ export async function* getDeepDiveResponseStream(newMessage: string, file?: File
             thinkingConfig: { thinkingBudget: 32768 },
         },
     };
-    
+
     try {
-        const stream = await ai.models.generateContentStream(req);
+        const aiClient = getAIClient();
+        const stream = await aiClient.models.generateContentStream(req);
         for await (const chunk of stream) {
             yield {
                 text: chunk.text,
