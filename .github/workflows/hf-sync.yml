@@ -20,5 +20,5 @@ jobs:
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git remote set-url origin https://NurseCitizenDeveloper:${HF_TOKEN}@huggingface.co/spaces/NurseCitizenDeveloper/Health-Inclusion-Coach
-          git push origin master:main --force
+          git remote add hf https://NurseCitizenDeveloper:${HF_TOKEN}@huggingface.co/spaces/NurseCitizenDeveloper/Health-Inclusion-Coach || true
+          git push hf master:main --force
