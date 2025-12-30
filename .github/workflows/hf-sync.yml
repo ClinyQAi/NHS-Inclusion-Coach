@@ -14,9 +14,31 @@ jobs:
           fetch-depth: 0
           lfs: true
 
+      - name: Install dependencies
+        run: pip install huggingface_hub
+
       - name: Upload to Hugging Face Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          pip install --user huggingface_hub
-          ~/.local/bin/huggingface-cli upload NurseCitizenDeveloper/Health-Inclusion-Coach . . --repo-type space
+          python - <<EOF
+          from huggingface_hub import HfApi
+          import os
+
+          token = os.environ.get("HF_TOKEN")
+          if not token:
+              raise ValueError("HF_TOKEN not found in environment")
+
+          api = HfApi(token=token)
+          
+          # Upload the current directory to the Space
+          print("Starting upload to Hugging Face Space...")
+          api.upload_folder(
+              folder_path=".",
+              repo_id="NurseCitizenDeveloper/Health-Inclusion-Coach",
+              repo_type="space",
+              path_in_repo=".",
+              ignore_patterns=[".git", ".github"]
+          )
+          print("Upload complete!")
+          EOF
