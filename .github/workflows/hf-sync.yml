@@ -18,5 +18,5 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          pip install huggingface_hub
-          python -m huggingface_hub.commands.huggingface_cli upload NurseCitizenDeveloper/Health-Inclusion-Coach . . --repo-type space
+          pip install --user huggingface_hub
+          ~/.local/bin/huggingface-cli upload NurseCitizenDeveloper/Health-Inclusion-Coach . . --repo-type space
